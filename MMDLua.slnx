@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Dialog/Dialog.csproj" />
+  <Project Path="ImGuiGenerator/ImGuiGenerator.csproj" Id="88511662-0c9e-4cd5-a865-5b764404b4f1" />
+  <Project Path="MMDLua/MMDLua.vcxproj" Id="5fb56bca-d386-4e4a-a240-4bf7eb3d5db6" />
+</Solution>

@@ -1,0 +1,2 @@
+Reading MMD hWnd (4)
+Reading finished (12)

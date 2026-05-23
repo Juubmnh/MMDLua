@@ -1,0 +1,17 @@
+{
+  "LuaSources": [
+    {
+      "directoryName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts",
+      "selected": false
+    }
+  ],
+  "LuaScripts": [
+    {
+      "fileName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\test.lua",
+      "selected": true
+    }
+  ],
+  "SelectedScriptIndices": [
+    0
+  ]
+}

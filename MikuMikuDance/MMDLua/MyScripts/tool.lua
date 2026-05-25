@@ -1,4 +1,4 @@
-println('From tool.lua')
+println('Called tool.lua')
 
 import('System')
 import('System.Numerics')

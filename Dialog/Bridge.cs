@@ -1,4 +1,5 @@
 ﻿using Hexa.NET.ImGui;
+using NativeFileDialogSharp;
 using NLua;
 using Scallion.DomainModels;
 using Scallion.DomainModels.Components;
@@ -10,7 +11,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace MMDLuaDialog;
@@ -164,15 +164,15 @@ internal class MMDMainData
     public int left_frame;
     public int pre_left_frame;
     public int now_frame;
-    
+
     public byte[] edit_interpolation_curve = new byte[4]; // x1 y1 x2 y2
 
     public byte is_camera_select;
     public byte[] is_model_bone_select = new byte[127];
-    
+
     public Vector2D<int> output_size_xy;
     public float length;
-    
+
     public string pmm_path = string.Empty;
 }
 
@@ -218,19 +218,29 @@ internal class Saveable(List<LuaSource> luaSources, List<LuaScript> luaScripts, 
     }
 }
 
-internal interface IParameter { }
+internal interface IParameter
+{
+    public string Name { get; }
+    public object? Value { get; }
+}
 
 internal class Parameter<T>(string name, T value) : IParameter
 {
     public string name = name;
     public T value = value;
+
+    string IParameter.Name => name;
+    object? IParameter.Value => value;
 }
+
+internal class DefaultParameter { }
 
 internal class Bridge
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() { IncludeFields = true, PropertyNameCaseInsensitive = true, WriteIndented = true };
     private readonly EventWaitHandle _pipeListenerEvent, _saveProjectEvent, _saveProjectFinishedEvent, _dropFileEvent;
     private readonly Lua _lua;
+    private readonly Queue<object?> _parameterQueue = [];
 
     public string ConfigFilePath { get; } = Path.Combine(AppContext.BaseDirectory, "config.json");
     public string VmdFilePath { get; } = Path.Combine(AppContext.BaseDirectory, "motion.vmd");
@@ -827,6 +837,7 @@ internal class Bridge
     {
         try
         {
+            Saveable.SelectedScripts.Clear();
             Saveable.LuaScripts.Clear();
             Saveable.LuaSources.ForEach(src => Saveable.LuaScripts.AddRange(src.Directory.GetFiles()
                 .Where(file => file.Extension.Equals(".lua")).Select(file => new LuaScript(file))));
@@ -843,6 +854,25 @@ internal class Bridge
         RefreshLuaScripts();
     }
 
+    public void AddParameter(IParameter param)
+    {
+        if (_parameterQueue.TryDequeue(out object? value))
+        {
+            if (value is DefaultParameter)
+            {
+                _lua[param.Name] = param.Value;
+            }
+            else
+            {
+                _lua[param.Name] = value;
+            }
+        }
+        else
+        {
+            Parameters.Add(param);
+        }
+    }
+
     public void PresetLuaUtilities()
     {
         _lua.LoadCLRPackage();
@@ -853,13 +883,14 @@ internal class Bridge
             Parameters.Clear();
             RequiringParameters = new();
         };
-        _lua["require_int"] = (string name, int defaultValue = default) => Parameters.Add(new Parameter<int>(name, defaultValue));
-        _lua["require_float"] = (string name, float defaultValue = default) => Parameters.Add(new Parameter<float>(name, defaultValue));
-        _lua["require_vec2"] = (string name, Vector2 defaultValue = default) => Parameters.Add(new Parameter<Vector2>(name, defaultValue));
-        _lua["require_vec3"] = (string name, Vector3 defaultValue = default) => Parameters.Add(new Parameter<Vector3>(name, defaultValue));
-        _lua["require_double"] = (string name, double defaultValue = default) => Parameters.Add(new Parameter<double>(name, defaultValue));
-        _lua["require_string"] = (string name, string defaultValue = "")
-            => Parameters.Add(new Parameter<string>(name, defaultValue + new string((char)0, (int)PInvoke.MAX_PATH - defaultValue.Length)));
+        _lua["require_int"] = (string name, int defaultValue = default) => AddParameter(new Parameter<int>(name, defaultValue));
+        _lua["require_float"] = (string name, float defaultValue = default) => AddParameter(new Parameter<float>(name, defaultValue));
+        _lua["require_vec2"] = (string name, Vector2 defaultValue = default) => AddParameter(new Parameter<Vector2>(name, defaultValue));
+        _lua["require_vec3"] = (string name, Vector3 defaultValue = default) => AddParameter(new Parameter<Vector3>(name, defaultValue));
+        _lua["require_double"] = (string name, double defaultValue = default) => AddParameter(new Parameter<double>(name, defaultValue));
+        _lua["require_string"] = (string name, string defaultValue = "") => AddParameter(new Parameter<string>(name, defaultValue));
+        _lua["set_next_param"] = (object? value) => _parameterQueue.Enqueue(value);
+        _lua["set_next_param_default"] = () => _parameterQueue.Enqueue(new DefaultParameter());
         _lua["end_params"] = () =>
         {
             RequiringParameters!.Task.Wait();
@@ -871,30 +902,7 @@ internal class Bridge
             {
                 Parameters.ForEach(param =>
                 {
-                    if (param is Parameter<int> intParam)
-                    {
-                        _lua[intParam.name] = intParam.value;
-                    }
-                    else if (param is Parameter<float> floatParam)
-                    {
-                        _lua[floatParam.name] = floatParam.value;
-                    }
-                    else if (param is Parameter<Vector2> vec2Param)
-                    {
-                        _lua[vec2Param.name] = vec2Param.value;
-                    }
-                    else if (param is Parameter<Vector3> vec3Param)
-                    {
-                        _lua[vec3Param.name] = vec3Param.value;
-                    }
-                    else if (param is Parameter<double> doubleParam)
-                    {
-                        _lua[doubleParam.name] = doubleParam.value;
-                    }
-                    else if (param is Parameter<string> stringParam)
-                    {
-                        _lua[stringParam.name] = stringParam.value;
-                    }
+                    _lua[param.Name] = param.Value;
                 });
             }
         };
@@ -939,6 +947,7 @@ internal class Bridge
             };
             _lua["motion"] = motion;
 
+            _parameterQueue.Clear();
             OutputEnabled = [.. Enumerable.Repeat(true, Saveable.SelectedScripts.Count)];
             for (CurrentScriptIndex = 0; CurrentScriptIndex < Saveable.SelectedScripts.Count; CurrentScriptIndex++)
             {
@@ -959,6 +968,17 @@ internal class Bridge
         catch (Exception ex)
         {
             ExceptionHandler(ex);
+        }
+    }
+
+    public void SaveAsLua()
+    {
+        var dialogResult = Dialog.FileSave("lua", AppContext.BaseDirectory);
+        if (dialogResult.IsOk)
+        {
+            var fileName = Path.GetExtension(dialogResult.Path).Equals(".lua") ? dialogResult.Path : dialogResult.Path + ".lua";
+            var text = string.Join(Environment.NewLine, Saveable.SelectedScripts.Select(scr => $"dofile([[{scr.File.FullName}]])"));
+            File.WriteAllText(fileName, text);
         }
     }
 }

@@ -6,10 +6,10 @@ using MMDLuaDialog;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D9;
 using Silk.NET.Maths;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -138,8 +138,12 @@ uint resizeWidth = 0, resizeHeight = 0;
 MSG msg = default;
 Vector4 clearColor = new(0, 0, 0, 0);
 bool showMainData = false;
-string fileToDrop = new((char)0, (int)PInvoke.MAX_PATH);
-string directoryToAdd = new((char)0, (int)PInvoke.MAX_PATH);
+
+string filterRegex = ".*";
+bool isValidFilterRegex = true;
+
+string directoryToAdd = string.Empty;
+string fileToDrop = string.Empty;
 unsafe
 {
     imguiIO.Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttc", 17);
@@ -154,6 +158,11 @@ unsafe
                 running = false;
         }
 
+        if (shouldTerminate())
+        {
+            running = false;
+        }
+
         var exStyle = (uint)PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         if (imguiIO.WantCaptureMouse)
         {
@@ -164,19 +173,7 @@ unsafe
             exStyle |= (uint)WINDOW_EX_STYLE.WS_EX_TRANSPARENT;
         }
         PInvoke.SetLastError(WIN32_ERROR.NO_ERROR);
-        if (PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)exStyle) == 0)
-        {
-            var error = Marshal.GetLastWin32Error();
-            if (error != 0)
-            {
-                throw new Win32Exception(error);
-            }
-        }
-
-        if (shouldTerminate())
-        {
-            ExHelper.ThrowIfFails(PInvoke.PostMessage(hWnd, PInvoke.WM_CLOSE, 0, 0));
-        }
+        ExHelper.ThrowIfFails((BOOL)PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)exStyle));
 
         if (deviceLost)
         {
@@ -215,10 +212,33 @@ unsafe
         {
             Task.Run(mmdBridge.RunScripts);
         }
+        ImGui.SameLine();
+        if (ImGui.Button("Save as Lua"))
+        {
+            mmdBridge.SaveAsLua();
+        }
+        if (ImGui.InputText("Filter Regex", ref filterRegex, PInvoke.MAX_PATH))
+        {
+            try
+            {
+                _ = new Regex(filterRegex);
+                isValidFilterRegex = true;
+            }
+            catch (Exception ex)
+            {
+                isValidFilterRegex = false;
+                mmdBridge.ExceptionHandler(ex);
+            }
+        }
         if (ImGui.BeginTable("Scripts", 2, ImGuiTableFlags.Borders))
         {
             mmdBridge.Saveable.LuaScripts.ForEach(scr =>
             {
+                if (isValidFilterRegex && !Regex.IsMatch(scr.File.FullName, filterRegex))
+                {
+                    return;
+                }
+
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 if (ImGui.Selectable(mmdBridge.Saveable.GetScriptDisplayName(scr), ref scr.selected))
@@ -269,14 +289,17 @@ unsafe
                     ImGui.InputText(stringParam.name, ref stringParam.value, PInvoke.MAX_PATH);
                 }
             });
-            if (ImGui.Button("Submit"))
+            if (mmdBridge.Parameters.Count == 0 || ImGui.Button("Submit"))
             {
                 mmdBridge.RequiringParameters.TrySetResult();
             }
-            ImGui.SameLine();
-            if (ImGui.Button("Cancel"))
+            if (mmdBridge.Parameters.Count != 0)
             {
-                mmdBridge.RequiringParameters.TrySetCanceled();
+                ImGui.SameLine();
+                if (ImGui.Button("Cancel"))
+                {
+                    mmdBridge.RequiringParameters.TrySetCanceled();
+                }
             }
         }
         ImGui.Spacing();
@@ -291,7 +314,7 @@ unsafe
             });
             ImGui.EndTable();
         }
-        ImGui.InputText(" ", ref directoryToAdd, PInvoke.MAX_PATH);
+        ImGui.InputText("Path", ref directoryToAdd, PInvoke.MAX_PATH);
         if (ImGui.Button("Add"))
         {
             mmdBridge.TryAddLuaSource(directoryToAdd);
@@ -309,16 +332,20 @@ unsafe
         ImGui.Spacing();
         ImGui.Spacing();
         ImGui.SeparatorText("Log");
-        if (ImGui.Button("Clear"))
+        if (ImGui.BeginChild("Log", ImGuiChildFlags.Borders))
         {
-            mmdBridge.Log.Clear();
+            if (ImGui.Button("Clear"))
+            {
+                mmdBridge.Log.Clear();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Export"))
+            {
+                File.WriteAllText(mmdBridge.LogFilePath, mmdBridge.Log.ToString());
+            }
+            ImGui.TextWrapped(mmdBridge.Log.ToString());
+            ImGui.EndChild();
         }
-        ImGui.SameLine();
-        if (ImGui.Button("Export"))
-        {
-            File.WriteAllText(mmdBridge.LogFilePath, mmdBridge.Log.ToString());
-        }
-        ImGui.TextWrapped(mmdBridge.Log.ToString());
         ImGui.End();
 
         if (showMainData)

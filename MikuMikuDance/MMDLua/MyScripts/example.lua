@@ -1,7 +1,5 @@
 -- suppress_output_for_current()
 
-dofile([[MyScripts\tool.lua]])
-
 begin_params()
 require_int("duration", 240)
 end_params()

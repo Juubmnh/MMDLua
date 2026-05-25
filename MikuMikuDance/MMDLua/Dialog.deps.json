@@ -10,6 +10,7 @@
         "dependencies": {
           "Hexa.NET.ImGui.Backends": "1.0.18",
           "NLua": "1.7.9",
+          "NativeFileDialogSharp": "0.5.0",
           "Scallion": "1.0.0",
           "Silk.NET.Direct3D9": "2.23.0"
         },
@@ -257,6 +258,66 @@
           }
         }
       },
+      "NativeFileDialogSharp/0.5.0": {
+        "runtime": {
+          "lib/netstandard2.0/NativeFileDialogSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/linux-x64/native/libnfd.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-x64/native/libnfd.dylib": {
+            "rid": "osx-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/nfd.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/nfd.exp": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/nfd.lib": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/nfd.pdb": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/nfd.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/nfd.exp": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/nfd.lib": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/nfd.pdb": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
       "NLua/1.7.9": {
         "dependencies": {
           "KeraLua": "1.4.9"
@@ -406,6 +467,13 @@
       "sha512": "sha512-fNGvKct2De8ghm0Bpfq0iWthtzIWabgOTi+gJhNOPhNJIowXNEUE2eZNW/zNCzrHVA3PXg2yZ+3cWZndC2IqYA==",
       "path": "microsoft.extensions.dependencymodel/9.0.9",
       "hashPath": "microsoft.extensions.dependencymodel.9.0.9.nupkg.sha512"
+    },
+    "NativeFileDialogSharp/0.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OvASDrHJhY1OzD3Cr9Pw7sgaj+WliK0CAD+0HL14jPJMxnkirC5vr3XhxbY24MKwkxANNgmN+ao7iiNOopOSqQ==",
+      "path": "nativefiledialogsharp/0.5.0",
+      "hashPath": "nativefiledialogsharp.0.5.0.nupkg.sha512"
     },
     "NLua/1.7.9": {
       "type": "package",

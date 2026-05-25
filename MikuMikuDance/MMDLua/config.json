@@ -1,17 +1,29 @@
 {
   "LuaSources": [
     {
-      "directoryName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts",
+      "directoryName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\",
+      "selected": false
+    },
+    {
+      "directoryName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\Combined",
       "selected": false
     }
   ],
   "LuaScripts": [
     {
-      "fileName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\test.lua",
+      "fileName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\example.lua",
+      "selected": false
+    },
+    {
+      "fileName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\tool.lua",
+      "selected": false
+    },
+    {
+      "fileName": "D:\\Juubmnh.Home\\Programming\\Projects\\Hybrid\\MMDLua\\MikuMikuDance\\MMDLua\\MyScripts\\Combined\\run_example.lua",
       "selected": true
     }
   ],
   "SelectedScriptIndices": [
-    0
+    2
   ]
 }

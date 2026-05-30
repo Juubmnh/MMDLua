@@ -17,4 +17,6 @@ Using this embedded application in conjunction with various Lua scripts for Miku
 * [Scallion](https://github.com/paralleltree/Scallion) by Ryo Namiki
 * [Hexa.NET.ImGui](https://github.com/HexaEngine/Hexa.NET.ImGui) by HexaEngine
 * [NLua](https://github.com/NLua/NLua) by NLua
+* [lua-matrix](https://github.com/davidm/lua-matrix) by Michael Lutz, David Manura
+* [LDoc](https://github.com/lunarmodules/ldoc) by Steve Donovan
 * [NativeFileDialogSharp](https://github.com/milleniumbug/NativeFileDialogSharp) by milleniumbug

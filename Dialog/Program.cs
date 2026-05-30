@@ -25,7 +25,7 @@ var stopwatch = new Stopwatch();
 stopwatch.Start();
 Func<bool> shouldTerminate = () =>
 {
-    if (stopwatch.Elapsed.TotalSeconds < 10)
+    if (stopwatch.Elapsed.TotalMinutes < 1)
     {
         return !mmdBridge.TargetHWnd.IsNull && !PInvoke.IsWindow(mmdBridge.TargetHWnd);
     }
@@ -217,6 +217,11 @@ unsafe
         {
             mmdBridge.SaveAsLua();
         }
+        ImGui.SameLine();
+        if (ImGui.Button("Reset Lua State"))
+        {
+            mmdBridge.ResetLuaState();
+        }
         if (ImGui.InputText("Filter Regex", ref filterRegex, PInvoke.MAX_PATH))
         {
             try
@@ -232,8 +237,9 @@ unsafe
         }
         if (ImGui.BeginTable("Scripts", 2, ImGuiTableFlags.Borders))
         {
-            mmdBridge.Saveable.LuaScripts.ForEach(scr =>
+            for (int i = 0; i < mmdBridge.Saveable.LuaScripts.Count; i++)
             {
+                var scr = mmdBridge.Saveable.LuaScripts[i];
                 if (isValidFilterRegex && !Regex.IsMatch(scr.File.FullName, filterRegex))
                 {
                     return;
@@ -241,7 +247,7 @@ unsafe
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
-                if (ImGui.Selectable(mmdBridge.Saveable.GetScriptDisplayName(scr), ref scr.selected))
+                if (ImGui.Selectable(mmdBridge.Saveable.GetScriptDisplayName(i), ref scr.selected))
                 {
                     if (scr.selected)
                     {
@@ -254,7 +260,7 @@ unsafe
                 }
                 ImGui.TableNextColumn();
                 ImGui.Text(scr.File.DirectoryName);
-            });
+            }
             ImGui.EndTable();
         }
         ImGui.Spacing();

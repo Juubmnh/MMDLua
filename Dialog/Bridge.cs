@@ -211,10 +211,11 @@ internal class Saveable(List<LuaSource> luaSources, List<LuaScript> luaScripts, 
     public IEnumerable<int> SelectedScriptIndices => SelectedScripts.Select(scr => LuaScripts.IndexOf(scr));
 
     public Saveable() : this([], [], []) { }
-    public string GetScriptDisplayName(LuaScript script)
+    public string GetScriptDisplayName(int index)
     {
+        var script = LuaScripts[index];
         var order = SelectedScripts.IndexOf(script) + 1;
-        return order == 0 ? script.File.Name : $"{script.File.Name} ({order})";
+        return (order == 0 ? script.File.Name : $"{script.File.Name} ({order})") + $"###lua_script_{index}";
     }
 }
 
@@ -239,7 +240,7 @@ internal class Bridge
 {
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() { IncludeFields = true, PropertyNameCaseInsensitive = true, WriteIndented = true };
     private readonly EventWaitHandle _pipeListenerEvent, _saveProjectEvent, _saveProjectFinishedEvent, _dropFileEvent;
-    private readonly Lua _lua;
+    private Lua _lua;
     private readonly Queue<object?> _parameterQueue = [];
 
     public string ConfigFilePath { get; } = Path.Combine(AppContext.BaseDirectory, "config.json");
@@ -277,9 +278,7 @@ internal class Bridge
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         ShiftJIS = Encoding.GetEncoding("shift_jis");
 
-        _lua = new();
-        _lua.State.Encoding = Encoding.Default;
-        PresetLuaUtilities();
+        ResetLuaState();
 
         Task.Run(PipeProc);
     }
@@ -837,6 +836,8 @@ internal class Bridge
     {
         try
         {
+            RequiringParameters?.TrySetCanceled();
+
             Saveable.SelectedScripts.Clear();
             Saveable.LuaScripts.Clear();
             Saveable.LuaSources.ForEach(src => Saveable.LuaScripts.AddRange(src.Directory.GetFiles()
@@ -873,25 +874,30 @@ internal class Bridge
         }
     }
 
-    public void PresetLuaUtilities()
+    public void ResetLuaState()
     {
-        _lua.LoadCLRPackage();
+        _lua = new();
+        _lua.State.Encoding = Encoding.Default;
 
-        _lua["println"] = (object obj) => Log.AppendLine(obj.ToString());
-        _lua["begin_params"] = () =>
+        _lua.LoadCLRPackage();
+        _lua.DoString("luanet.load_assembly('Scallion')");
+
+        _lua.DoString("mish = {}");
+        _lua["mish.log"] = (object obj) => Log.AppendLine(obj.ToString());
+        _lua["mish.beginParams"] = () =>
         {
             Parameters.Clear();
             RequiringParameters = new();
         };
-        _lua["require_int"] = (string name, int defaultValue = default) => AddParameter(new Parameter<int>(name, defaultValue));
-        _lua["require_float"] = (string name, float defaultValue = default) => AddParameter(new Parameter<float>(name, defaultValue));
-        _lua["require_vec2"] = (string name, Vector2 defaultValue = default) => AddParameter(new Parameter<Vector2>(name, defaultValue));
-        _lua["require_vec3"] = (string name, Vector3 defaultValue = default) => AddParameter(new Parameter<Vector3>(name, defaultValue));
-        _lua["require_double"] = (string name, double defaultValue = default) => AddParameter(new Parameter<double>(name, defaultValue));
-        _lua["require_string"] = (string name, string defaultValue = "") => AddParameter(new Parameter<string>(name, defaultValue));
-        _lua["set_next_param"] = (object? value) => _parameterQueue.Enqueue(value);
-        _lua["set_next_param_default"] = () => _parameterQueue.Enqueue(new DefaultParameter());
-        _lua["end_params"] = () =>
+        _lua["mish.requireInt"] = (string name, int defaultValue = default) => AddParameter(new Parameter<int>(name, defaultValue));
+        _lua["mish.requireFloat"] = (string name, float defaultValue = default) => AddParameter(new Parameter<float>(name, defaultValue));
+        _lua["mish.requireVec2"] = (string name, Vector2 defaultValue = default) => AddParameter(new Parameter<Vector2>(name, defaultValue));
+        _lua["mish.requireVec3"] = (string name, Vector3 defaultValue = default) => AddParameter(new Parameter<Vector3>(name, defaultValue));
+        _lua["mish.requireDouble"] = (string name, double defaultValue = default) => AddParameter(new Parameter<double>(name, defaultValue));
+        _lua["mish.requireString"] = (string name, string defaultValue = "") => AddParameter(new Parameter<string>(name, defaultValue));
+        _lua["mish.setNextParam"] = (object? value) => _parameterQueue.Enqueue(value);
+        _lua["mish.setNextParamDefault"] = () => _parameterQueue.Enqueue(new DefaultParameter());
+        _lua["mish.endParams"] = () =>
         {
             RequiringParameters!.Task.Wait();
             if (RequiringParameters.Task.Status == TaskStatus.Canceled)
@@ -906,13 +912,19 @@ internal class Bridge
                 });
             }
         };
-        _lua["suppress_output_for_current"] = () => OutputEnabled[CurrentScriptIndex] = false;
+        _lua["mish.suppressOutputForCurrent"] = () => OutputEnabled[CurrentScriptIndex] = false;
     }
 
     public async Task RunScripts()
     {
         try
         {
+            if (CurrentScriptIndex != -1)
+            {
+                return;
+            }
+            CurrentScriptIndex = 0;
+
             var pmmFile = new FileInfo(PmmFilePath);
             var previousWriteTime = pmmFile.Exists ? pmmFile.LastWriteTime : DateTime.MinValue;
 
@@ -924,6 +936,7 @@ internal class Bridge
             var currentWriteTime = pmmFile.Exists ? pmmFile.LastWriteTime : DateTime.MinValue;
             if (previousWriteTime >= currentWriteTime)
             {
+                CurrentScriptIndex = -1;
                 return;
             }
 
@@ -949,11 +962,12 @@ internal class Bridge
 
             _parameterQueue.Clear();
             OutputEnabled = [.. Enumerable.Repeat(true, Saveable.SelectedScripts.Count)];
-            for (CurrentScriptIndex = 0; CurrentScriptIndex < Saveable.SelectedScripts.Count; CurrentScriptIndex++)
+            for (; CurrentScriptIndex < Saveable.SelectedScripts.Count; CurrentScriptIndex++)
             {
                 _lua.DoFile(Saveable.SelectedScripts[CurrentScriptIndex].File.FullName);
                 if (RequiringParameters is not null && RequiringParameters.Task.Status == TaskStatus.Canceled)
                 {
+                    CurrentScriptIndex = -1;
                     return;
                 }
             }
@@ -969,6 +983,20 @@ internal class Bridge
         {
             ExceptionHandler(ex);
         }
+        finally
+        {
+            CurrentScriptIndex = -1;
+        }
+    }
+
+    public static string StripBasePath(string path)
+    {
+        var relative = Path.GetRelativePath(AppContext.BaseDirectory, path);
+        if (relative.StartsWith(@"..\..\.."))
+        {
+            return path;
+        }
+        return relative;
     }
 
     public void SaveAsLua()
@@ -977,7 +1005,7 @@ internal class Bridge
         if (dialogResult.IsOk)
         {
             var fileName = Path.GetExtension(dialogResult.Path).Equals(".lua") ? dialogResult.Path : dialogResult.Path + ".lua";
-            var text = string.Join(Environment.NewLine, Saveable.SelectedScripts.Select(scr => $"dofile([[{scr.File.FullName}]])"));
+            var text = string.Join(Environment.NewLine, Saveable.SelectedScripts.Select(scr => $"dofile [[{StripBasePath(scr.File.FullName)}]]"));
             File.WriteAllText(fileName, text);
         }
     }

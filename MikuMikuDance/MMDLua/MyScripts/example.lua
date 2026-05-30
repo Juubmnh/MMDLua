@@ -1,22 +1,28 @@
--- suppress_output_for_current()
+require [[utilities\mish]]
 
-begin_params()
-require_int("duration", 240)
-end_params()
-println(string.format('duration=%d', duration))
+import 'System.Numerics'
 
-println(motion.ModelName)
-println(motion.Bones:get_Item(0).Name)
+mish.beginParams()
+mish.requireInt("duration", 120)
+mish.endParams()
+mish.log(string.format('duration=%d', duration))
 
-for i = 0, duration, 1 do
-  bonest = BoneState()
-  bonest.Position = Vector3(10 * math.cos(math.pi * i / 60), 0, 20 * math.sin(math.pi * i / 60))
-  
-  bonekf = BoneKeyFrame()
-  bonekf.KeyFrameIndex = i
-  bonekf.Value = bonest
-  
-  motion.Bones:get_Item(0).KeyFrames:Add(bonekf)
-  motion.Bones:get_Item(find_bone_index('左足ＩＫ')).KeyFrames:Add(bonekf)
-  motion.Bones:get_Item(find_bone_index('右足ＩＫ')).KeyFrames:Add(bonekf)
-end
+mish.log(motion.ModelName)
+mish.log(motion.Bones:get_Item(0).Name)
+
+generateBoneKeyFrames({
+    motion.Bones:get_Item(0),
+    motion.Bones:get_Item(findBoneIndex('左足ＩＫ')),
+    motion.Bones:get_Item(findBoneIndex('右足ＩＫ'))
+  },
+  function(bonest, t)
+    bonest.Position = Vector3(10 * math.cos(2 * math.pi * t), 0, 20 * math.sin(2 * math.pi * t))
+    curve = function(t) return matrix{ t, t } end
+    bonest.Interpolation = BoneInterpolation(
+      bezierApproximate(curve, 100),
+      bezierApproximate(curve, 100),
+      bezierApproximate(curve, 100),
+      bezierApproximate(curve, 100)
+    )
+  end,
+0, duration, 120)

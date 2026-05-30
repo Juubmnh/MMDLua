@@ -1,0 +1,278 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>mish</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>mish</code></h1>
+<p>useful utilities for MMDLua scripts</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#math.round">math.round (n)</a></td>
+	<td class="summary">round a number to the nearest integer</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#permutation">permutation (n, m)</a></td>
+	<td class="summary">generalized permutation number P(n, m)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#combination">combination (n, m)</a></td>
+	<td class="summary">generalized combination number C(n, m)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bernsteinBasis">bernsteinBasis (n, m, t)</a></td>
+	<td class="summary">the Bernstein basis function of the binomial distribution B(n,m) with t as the variable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bezierApproximate">bezierApproximate (curve, samples)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#findBoneIndex">findBoneIndex (name)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#generateBoneKeyFrames">generateBoneKeyFrames (bones, callback, startFrame, endFrame, segments)</a></td>
+	<td class="summary"></td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "math.round"></a>
+    <strong>math.round (n)</strong>
+    </dt>
+    <dd>
+    round a number to the nearest integer
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "permutation"></a>
+    <strong>permutation (n, m)</strong>
+    </dt>
+    <dd>
+    generalized permutation number P(n, m)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+        <li><span class="parameter">m</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "combination"></a>
+    <strong>combination (n, m)</strong>
+    </dt>
+    <dd>
+    generalized combination number C(n, m)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+        <li><span class="parameter">m</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bernsteinBasis"></a>
+    <strong>bernsteinBasis (n, m, t)</strong>
+    </dt>
+    <dd>
+    the Bernstein basis function of the binomial distribution B(n,m) with t as the variable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+        <li><span class="parameter">m</span>
+
+        </li>
+        <li><span class="parameter">t</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bezierApproximate"></a>
+    <strong>bezierApproximate (curve, samples)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">curve</span>
+         a curve function to be approximated, with the normalized time parameter, returning a 2×1 matrix representing a single point; the curve should pass through the points (0,0) and (1,1)
+        </li>
+        <li><span class="parameter">samples</span>
+         the count of samples taken from the curve
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a Scallion.DomainModels.Components.Interpolation object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "findBoneIndex"></a>
+    <strong>findBoneIndex (name)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         the text contained in the bone name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the zero-based index of the bone, or nil if not found
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "generateBoneKeyFrames"></a>
+    <strong>generateBoneKeyFrames (bones, callback, startFrame, endFrame, segments)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bones</span>
+         a table of Scallion.DomainModels.Components.Bone objects acquiring the keyframes
+        </li>
+        <li><span class="parameter">callback</span>
+         the callback function used to set a BoneState object, which accepts an empty BoneState object to be modified and a normalized time parameter
+        </li>
+        <li><span class="parameter">startFrame</span>
+         the first frame index of the keyframe sequence
+        </li>
+        <li><span class="parameter">endFrame</span>
+         the last frame index of the keyframe sequence
+        </li>
+        <li><span class="parameter">segments</span>
+         the number of segments into which this part of the animation is divided; the default is 1
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-05-30 14:54:57 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

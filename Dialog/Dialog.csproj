@@ -18,5 +18,23 @@
     <PackageReference Include="Scallion" Version="1.0.0" />
     <PackageReference Include="NLua" Version="1.7.9" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="utilities\complex.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="utilities\doc\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="utilities\doc\ldoc.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="utilities\matrix.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="utilities\mish.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   
 </Project>
